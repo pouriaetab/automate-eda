@@ -27,7 +27,7 @@ git clone https://github.com/pouriaetab/automate-eda.git
 cd automate-eda
 ```
 ### Usage
-1. **Prepare Your EDA Functions Or Utilize the Default Functions**: To get started, you can either place your custom EDA functions in a Python file (e.g., eda_functions.py), making sure that the first function is tailored to read a CSV file and return a pandas DataFrame. Alternatively, you have the option to directly utilize the default functions provided.
+1. **Prepare Your EDA Functions Or Utilize the Default Functions**: To get started, you can either place your custom EDA functions in a Python file (e.g., eda_functions.py), making sure that the import requirements are met while the first function is tailored to read a CSV file and return a pandas DataFrame. Alternatively, you have the option to directly utilize the default functions provided.
 
 2. **Generate and Execute Notebook**: Run the provided script with the name of your CSV file as an argument to generate and execute a Jupyter Notebook:
 
