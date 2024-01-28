@@ -1,0 +1,6 @@
+# Byte-compiled
+__pycache__/
+
+# other files
+generated_notebook.ipynb
+train.csv
