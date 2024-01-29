@@ -208,3 +208,46 @@ def find_and_display_outliers(df, display_info=True):
 
 
 
+# === Markdown Start ===
+# 
+# **Correlation heatmap**
+# === Markdown End ===
+def display_corr_heatmap(df):
+    """
+    Displays correlation heatmap of the given DataFrame, dynamically adjusting the figure size
+    based on the number of numerical variables, with a limit of 100 numerical variables.
+
+    If there are more than 100 numerical variables, informs the user about the number of omitted variables.
+
+    Parameters:
+    - df: DataFrame, the pandas DataFrame to display.
+
+    Returns:
+    - Heatmap plot of the dataframe.
+    """
+    # Filter for numerical variables only
+    var_num_limit = 50
+    df_numeric = df.select_dtypes(include=['number'])
+    num_variables_total = df_numeric.shape[1]
+    num_variables_used = min(num_variables_total, var_num_limit)
+
+    if num_variables_total > var_num_limit:
+        print(f"The dataset contains {num_variables_total} numerical variables. Only the first {var_num_limit} are used in the correlation table.")
+        print(f"There are {num_variables_total - var_num_limit} numerical variables not included in the heatmap.")
+        df_numeric = df_numeric.iloc[:, :var_num_limit]
+
+    # Calculate figure size based on the number of variables
+    fig_width = 30 / 40 * num_variables_used
+    fig_height = 16 / 40 * num_variables_used
+
+    plt.figure(figsize=(fig_width, fig_height))
+    heatmap = sns.heatmap(df_numeric.corr(), vmin=-1, vmax=1, annot=True, fmt=".2f", 
+                          cmap=sns.color_palette("coolwarm", as_cmap=True), linewidths=0.5, 
+                          cbar_kws={"shrink": 0.5},)
+    plt.xticks(rotation=45, ha='right', fontsize=8)
+    plt.yticks(fontsize=8)
+    heatmap.set_title('Correlation Heatmap', fontdict={'fontsize':8}, pad=11)
+    cbar = heatmap.collections[0].colorbar
+    cbar.ax.tick_params(labelsize=8)
+    plt.show()
+
