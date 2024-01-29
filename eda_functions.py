@@ -2,8 +2,18 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
-# Load a CSV file into a DataFrame
+# %load_ext autoreload
+# %autoreload 2
+
+# Define the maximum number of rows to display
+# MAX_ROWS_TO_DISPLAY = 100
+
+# === Markdown Start ===
+# 
+# **Load a CSV file into a DataFrame**
+# === Markdown End ===
 def csv_to_df(df):
     """
     Converts a CSV file to a pandas DataFrame. Assumes the CSV file is in the current working directory.
@@ -20,20 +30,26 @@ def csv_to_df(df):
     df = pd.read_csv(csv_file_path)
     return df
 
-# Display the first 5 rows of the DataFrame
-def display_first_five_rows(df):
+# === Markdown Start ===
+# 
+# **Display the first few rows of the DataFrame**
+# === Markdown End ===
+def display_first_few_rows(df):
     """
-    Displays the first 5 rows of the given DataFrame.
+    Displays the first few rows of DataFrame.
 
     Parameters: 
     - df: DataFrame, the pandas DataFrame to display.
 
     Returns:
-    - DataFrame: The first 5 rows of the given DataFrame.
+    - DataFrame: The first few rows of the given DataFrame.
     """
-    return df.head()
+    return df.head(10)
 
-# Display the first 5 rows of the DataFrame
+# === Markdown Start ===
+# 
+# **Display basic information about the given DataFrame**
+# === Markdown End ===
 def display_info(df):
     """
     Displays basic information about the given DataFrame.
@@ -46,8 +62,11 @@ def display_info(df):
     """
     return df.info()
 
-# Display descriptive statistics about the DataFrame
-def display_info(df):
+# === Markdown Start ===
+# 
+# **Display descriptive statistics about the DataFrame**
+# === Markdown End ===
+def display_descriptive_statistics(df):
     """
     Displays descriptive statistics about the given DataFrame.
 
@@ -59,7 +78,10 @@ def display_info(df):
     """
     return df.describe()
 
-# Display info on columns with missing values
+# === Markdown Start ===
+# 
+# **Display info on columns with missing values**
+# === Markdown End ===
 def null_columns(df):
     """
     Display columns with missing values, the total count, and the percentage of missing values in descending order.
@@ -91,4 +113,98 @@ def null_columns(df):
         print(null_info)
     else:
         print("No columns with missing values.")
+
+# === Markdown Start ===
+# 
+# **Display descriptive statistics about the DataFrame2**
+# === Markdown End ===
+def display_descriptive_statistics2(df):
+    """
+    Displays descriptive statistics about the given DataFrame.
+
+    Parameters:
+    - df: DataFrame, the pandas DataFrame to display.
+
+    Returns:
+    - DataFrame: The table of descriptive statistics about the given DataFrame.
+    """
+    return df.describe()
+
+# === Markdown Start ===
+# 
+# **Display information on duplicated rows**
+# === Markdown End ===
+def duplicate_percentage(df):
+    """
+    Print the percentage of duplicated rows in a DataFrame.
+
+    Parameters:
+    - df: DataFrame, the input DataFrame.
+
+    Returns:
+    None (prints texts).
+    """
+    dup_sum = df.duplicated().sum()
+    dup_pct = (dup_sum / len(df)) * 100
+    print(f"Total duplicated rows: {dup_sum: .2f}. \nPercentage of duplicated rows: {dup_pct: .2f}%")
+
+
+# === Markdown Start ===
+# 
+# **Display outliers**
+# === Markdown End ===
+def find_and_display_outliers(df, display_info=True):
+    """
+    Find and display outliers in non-binary and non-object columns of a DataFrame.
+
+    Parameters:
+    - df: DataFrame, the input DataFrame.
+    - display_info: bool, set to True to print information, False to suppress printing.
+
+    Returns:
+    - None (prints texts about outlier)
+    """
+    # Select non-binary and non-object columns
+    numeric_columns = df.select_dtypes(['float64', 'int64']).columns
+
+    # Filter out binary features
+    non_binary_columns = [col for col in numeric_columns if df[col].nunique() > 2]
+
+    # Dictionaries to store lower and upper limits for each column
+    lower_limits = {}
+    upper_limits = {}
+    
+    for column_name in non_binary_columns:
+        # Calculate 25th and 75th percentiles
+        q25 = df[column_name].quantile(0.25)
+        q75 = df[column_name].quantile(0.75)
+
+        # Calculate interquartile range (IQR)
+        iqr = q75 - q25
+
+        # Define lower and upper limits for outliers
+        lower_limit = q25 - 1.5 * iqr
+        upper_limit = q75 + 1.5 * iqr
+
+        # Identify rows containing outliers
+        outliers = df[(df[column_name] < lower_limit) | (df[column_name] > upper_limit)]
+        total_outliers = len(outliers)
+        if total_outliers > 0:
+            lower_limits[column_name] = lower_limit
+            upper_limits[column_name] = upper_limit
+
+        # Display information only if display_info is True and outliers are found
+        if display_info and total_outliers > 0:
+            print(f"\nColumn: '{column_name}'")
+            print(f"25th Percentile: {q25}")
+            print(f"75th Percentile: {q75}")
+            print(f"IQR: {iqr}")
+            print(f"Lower Limit for Outliers: {lower_limit}")
+            print(f"Upper Limit for Outliers: {upper_limit}")
+            print(f"Total Rows with Outliers: {total_outliers}")
+    
+    if display_info and total_outliers == 0:
+        print("There are no outliers in any of the columns.")
+
+
 

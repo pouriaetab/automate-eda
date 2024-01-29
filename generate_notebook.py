@@ -1,6 +1,7 @@
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-from nbformat.v4 import new_notebook, new_code_cell
+from nbformat.v4 import new_notebook, new_code_cell, new_markdown_cell
+import re
 import sys
 import os
 import inspect
@@ -29,7 +30,6 @@ def get_import_statements(python_file_path):
                 break
     return import_statements
 
-
 import_statements = get_import_statements(python_file_path)
 imports_cell_content = '\n'.join(import_statements)
 nb.cells.append(new_code_cell(imports_cell_content))
@@ -37,6 +37,27 @@ nb.cells.append(new_code_cell(imports_cell_content))
 # Import all functions from module_name
 nb.cells.append(new_code_cell(f"from {module_name} import *"))
 
+def add_markdown_blocks_with_functions(python_file_path, notebook, csv_file):
+    with open(python_file_path, 'r') as file:
+        content = file.read()
+
+    # Split the content by function definitions and markdown blocks
+    pattern = re.compile(r'# === Markdown Start ===\n(.*?)# === Markdown End ===\n(.*?)def\s+(\w+)\(', re.DOTALL)
+    matches = pattern.findall(content)
+    
+    for match in matches:
+        markdown_content, function_def, function_name = match
+        # Clean up the markdown content
+        markdown_content = re.sub(r'^#\s?', '', markdown_content, flags=re.MULTILINE).strip()
+        # Add markdown cell to the notebook
+        notebook.cells.append(new_markdown_cell(markdown_content))
+        # Determine the appropriate code cell content
+        if function_name == get_first_function_name(python_file_path):
+            code_cell_content = f"df = {function_name}('{csv_file}')"
+        else:
+            code_cell_content = f"{function_name}(df)"
+        # Add code cell for the function
+        notebook.cells.append(new_code_cell(code_cell_content))
 
 # Get first function name from eda_functions.py
 def get_first_function_name(module_path):
@@ -47,22 +68,16 @@ def get_first_function_name(module_path):
     first_function_name = functions[0][0] if functions else None
     return first_function_name
 
-first_function_name = get_first_function_name(python_file_path)
-
-# Add a cell to load the CSV file using the first_function_name function
-if first_function_name:
-    nb.cells.append(new_code_cell(f"df = {first_function_name}('{csv_file}')"))
-
-# Dynamically add cells for each function in the module
-for name, obj in inspect.getmembers(module, inspect.isfunction):
-    # Skip csv_to_df since it's already called
-    if name == 'csv_to_df':
-        continue
-    # Create a cell for each function, assuming they take a DataFrame as the only argument
-    nb.cells.append(new_code_cell(f"{name}(df)"))
+# Call the function to add markdown blocks and functions to the notebook
+add_markdown_blocks_with_functions(python_file_path, nb, csv_file)
 
 # Define the path for the new notebook
 notebook_path = os.path.join(os.getcwd(), "generated_notebook.ipynb")
+
+# Check if the notebook aleady exists and delete it if it does
+if os.path.exists(notebook_path):
+    os.remove(notebook_path)
+    print(f"Deleted existing notebook: {notebook_path}")
 
 # Write the notebook to the file
 with open(notebook_path, 'w', encoding='utf-8') as f:
@@ -72,7 +87,7 @@ def execute_notebook(notebook_path):
     with open(notebook_path) as f:
         nb = nbformat.read(f, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
-    ep.preprocess(nb, {'metadata': {'path': './'}})  # Adjust the path as needed
+    ep.preprocess(nb, {'metadata': {'path': './'}})
     with open(notebook_path, 'wt') as f:
         nbformat.write(nb, f)
 
