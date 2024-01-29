@@ -226,7 +226,7 @@ def display_corr_heatmap(df):
     - Heatmap plot of the dataframe.
     """
     # Filter for numerical variables only
-    var_num_limit = 50
+    var_num_limit = 45
     df_numeric = df.select_dtypes(include=['number'])
     num_variables_total = df_numeric.shape[1]
     num_variables_used = min(num_variables_total, var_num_limit)
