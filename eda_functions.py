@@ -25,7 +25,7 @@ def display_first_five_rows(df):
     """
     Displays the first 5 rows of the given DataFrame.
 
-    Parameters:
+    Parameters: 
     - df: DataFrame, the pandas DataFrame to display.
 
     Returns:
