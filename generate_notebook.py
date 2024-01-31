@@ -7,6 +7,20 @@ import os
 import inspect
 import importlib.util
 
+# Utility function to geberate function calls with arguments
+def generate_function_call_with_defaults(function_name, module):
+    import inspect
+    function = getattr(module, function_name)
+    sig = inspect.signature(function)
+    args_str = []
+    for name, param in sig.parameters.items():
+        if param.default is inspect.Parameter.empty:
+            args_str.append(name)
+        else:
+            default_value = repr(param.default)
+            args_str.append(f"{name}={default_value}")
+    return f"{function_name}({', '.join(args_str)})"
+
 # Load the module dynamically
 module_name = 'eda_functions'
 module = importlib.import_module(module_name)
@@ -44,6 +58,8 @@ def add_markdown_blocks_with_functions(python_file_path, notebook, csv_file):
     # Split the content by function definitions and markdown blocks
     pattern = re.compile(r'# === Markdown Start ===\n(.*?)# === Markdown End ===\n(.*?)def\s+(\w+)\(', re.DOTALL)
     matches = pattern.findall(content)
+
+    first_function_name = get_first_function_name(python_file_path)
     
     for match in matches:
         markdown_content, function_def, function_name = match
@@ -51,13 +67,17 @@ def add_markdown_blocks_with_functions(python_file_path, notebook, csv_file):
         markdown_content = re.sub(r'^#\s?', '', markdown_content, flags=re.MULTILINE).strip()
         # Add markdown cell to the notebook
         notebook.cells.append(new_markdown_cell(markdown_content))
+        
         # Determine the appropriate code cell content
-        if function_name == get_first_function_name(python_file_path):
+        if function_name == first_function_name:
             code_cell_content = f"df = {function_name}('{csv_file}')"
+            notebook.cells.append(new_code_cell(code_cell_content))
         else:
-            code_cell_content = f"{function_name}(df)"
+            #code_cell_content = f"{function_name}(df)"
+            function_call_string = generate_function_call_with_defaults(function_name, module)
+            notebook.cells.append(new_code_cell(function_call_string))
         # Add code cell for the function
-        notebook.cells.append(new_code_cell(code_cell_content))
+        #notebook.cells.append(new_code_cell(code_cell_content))
 
 # Get first function name from eda_functions.py
 def get_first_function_name(module_path):
